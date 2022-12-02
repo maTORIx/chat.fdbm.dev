@@ -1,0 +1,55 @@
+syntax = "proto3";
+
+package chat.v1;
+
+option go_package = "github.com/matorix/chat.fdbm.dev/gen/chat/v1;chatv1";
+
+message GreetRequest {
+    string name = 1;
+}
+
+message GreetResponse {
+    string greeting = 1;
+}
+
+message SendChatRequest {
+    string discussion_id = 1;
+    string name = 2;
+    string message = 3;
+    string low_password = 4;
+}
+
+message SendChatResponse {
+}
+
+message GetChatsRequest {
+    string discussion_id = 1;
+    string low_password = 2;
+}
+
+message Chat {
+    string id = 1;
+    string name = 3;
+    string message = 4;
+    string created_at = 5;
+}
+
+message GetChatsResponse {
+    repeated Chat chats = 1;
+}
+
+message GetChatsStreamRequest {
+    string discussion_id = 1;
+    string low_password = 2;
+}
+
+message GetChatsStreamResponse {
+    repeated Chat chats = 1;
+}
+
+service ChatService {
+    rpc Greet(GreetRequest) returns (GreetResponse) {};
+    rpc SendChat(SendChatRequest) returns (SendChatResponse) {};
+    rpc GetChats(GetChatsRequest) returns (GetChatsResponse) {};
+    rpc GetChatsStream(GetChatsStreamRequest) returns (stream GetChatsStreamResponse) {};
+}
