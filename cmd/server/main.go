@@ -27,10 +27,8 @@ import (
 var SECRET_KEY string = "SECRET_KEY"
 
 type WatchInfo struct {
-	DiscussionId string
-	Hash         string
-	WatchId      string
-	NewChats     []*chatv1.Chat
+	Hash      string
+	StreamRes *connect.ServerStream[chatv1.GetChatsStreamResponse]
 }
 
 var watchList map[string]map[string]*WatchInfo = map[string]map[string]*WatchInfo{}
@@ -88,7 +86,7 @@ func AddChat(chat *chatv1.SendChatRequest) error {
 	if err != nil {
 		return err
 	}
-	announceToWatchList(chat.DiscussionId, &chatv1.Chat{
+	announceToWatchList(chat.DiscussionId, hash, &chatv1.Chat{
 		Id:        strconv.Itoa(int(chatId)),
 		Name:      chat.Name,
 		Message:   chat.Message,
@@ -131,15 +129,9 @@ func ListChat(info *chatv1.GetChatsRequest) ([]*chatv1.Chat, error) {
 	return chats, nil
 }
 
-func addWatchList(discussion_id, hash string) string {
+func addWatchList(discussion_id string, info *WatchInfo) string {
 	id, _ := uuid.NewUUID()
 	strid := id.String()
-	info := &WatchInfo{
-		WatchId:      strid,
-		DiscussionId: discussion_id,
-		Hash:         hash,
-		NewChats:     []*chatv1.Chat{},
-	}
 	if _, ok := watchList[discussion_id]; !ok {
 		watchList[discussion_id] = map[string]*WatchInfo{}
 	}
@@ -147,13 +139,18 @@ func addWatchList(discussion_id, hash string) string {
 	return strid
 }
 
-func announceToWatchList(discussion_id string, newChat *chatv1.Chat) {
+func announceToWatchList(discussion_id, hash string, newChat *chatv1.Chat) {
 	if _, ok := watchList[discussion_id]; !ok {
 		return
 	}
+	var chats []*chatv1.Chat
+	chats = append(chats, newChat)
+
 	for _, info := range watchList[discussion_id] {
 		go func(info *WatchInfo) {
-			info.NewChats = append(info.NewChats, newChat)
+			if info.Hash == hash {
+				info.StreamRes.Send(&chatv1.GetChatsStreamResponse{Chats: chats})
+			}
 		}(info)
 	}
 }
@@ -211,15 +208,17 @@ func (s *ChatServer) GetChatsStream(
 
 	discussionId := req.Msg.DiscussionId
 	lowPassword := req.Msg.LowPassword
-	watchId := addWatchList(discussionId, generateHash(lowPassword, SECRET_KEY))
+	watchId := addWatchList(discussionId, &WatchInfo{
+		Hash:      generateHash(lowPassword, SECRET_KEY),
+		StreamRes: streamRes,
+	})
 	for {
-		err := streamRes.Send(&chatv1.GetChatsStreamResponse{Chats: watchList[discussionId][watchId].NewChats})
+		err := streamRes.Send(&chatv1.GetChatsStreamResponse{Chats: []*chatv1.Chat{}})
 		if err != nil {
 			watchList[discussionId][watchId] = nil
 			return connect.NewError(connect.CodeInternal, err)
 		}
-		watchList[discussionId][watchId].NewChats = nil
-		time.Sleep(time.Second * 2)
+		time.Sleep(time.Second * 30)
 	}
 }
 
