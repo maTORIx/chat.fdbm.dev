@@ -1,3 +1,4 @@
+import { Value } from "@bufbuild/protobuf";
 import { ChangeEvent, useState, useEffect, useRef } from "react";
 import { ChatsManager } from "./chatsManager";
 import { Chat } from "./gen/chat/v1/chat_pb";
@@ -52,10 +53,11 @@ function App() {
           setMessage("");
         }}
       >
-        <input name="name" onChange={withEventValue(setName)} />
+        <input name="name" onChange={withEventValue(setName)} value={name} />
         <textarea
           name="message"
           onChange={withEventValue(setMessage)}
+          value={message}
         ></textarea>
         <button>Submit</button>
       </form>
