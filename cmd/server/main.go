@@ -14,6 +14,7 @@ import (
 
 	"github.com/bufbuild/connect-go"
 	"github.com/google/uuid"
+	"github.com/rs/cors"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
 
@@ -32,7 +33,7 @@ type WatchInfo struct {
 	NewChats     []*chatv1.Chat
 }
 
-var watchList map[string]map[string]*WatchInfo
+var watchList map[string]map[string]*WatchInfo = map[string]map[string]*WatchInfo{}
 
 // db
 func InitializeDB(path string) error {
@@ -139,6 +140,9 @@ func addWatchList(discussion_id, hash string) string {
 		Hash:         hash,
 		NewChats:     []*chatv1.Chat{},
 	}
+	if _, ok := watchList[discussion_id]; !ok {
+		watchList[discussion_id] = map[string]*WatchInfo{}
+	}
 	watchList[discussion_id][strid] = info
 	return strid
 }
@@ -208,34 +212,30 @@ func (s *ChatServer) GetChatsStream(
 	discussionId := req.Msg.DiscussionId
 	lowPassword := req.Msg.LowPassword
 	watchId := addWatchList(discussionId, generateHash(lowPassword, SECRET_KEY))
-	sleepTime := 0
 	for {
-		if len(watchList[discussionId][watchId].NewChats) > 0 || sleepTime > 60 {
-			err := streamRes.Send(&chatv1.GetChatsStreamResponse{Chats: watchList[discussionId][watchId].NewChats})
-			if err != nil {
-				watchList[discussionId][watchId] = nil
-				return connect.NewError(connect.CodeInternal, err)
-			}
-			watchList[discussionId][watchId].NewChats = nil
+		err := streamRes.Send(&chatv1.GetChatsStreamResponse{Chats: watchList[discussionId][watchId].NewChats})
+		if err != nil {
+			watchList[discussionId][watchId] = nil
+			return connect.NewError(connect.CodeInternal, err)
 		}
+		watchList[discussionId][watchId].NewChats = nil
 		time.Sleep(time.Second * 2)
-		sleepTime += 2
 	}
-	return nil
 }
 
 func main() {
-	// init db
 	err := InitializeDB("./database.db")
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	server := &ChatServer{}
 	mux := http.NewServeMux()
 	path, handler := chatv1connect.NewChatServiceHandler(server)
 	mux.Handle(path, handler)
+	corsHandler := cors.Default().Handler(h2c.NewHandler(mux, &http2.Server{}))
 	http.ListenAndServe(
 		"localhost:8080",
-		h2c.NewHandler(mux, &http2.Server{}),
+		corsHandler,
 	)
 }

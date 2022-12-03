@@ -1,0 +1,32 @@
+body {
+    font-family: "BIZ UDPGothic", sans-serif;
+}
+
+.App {
+    width: 500px;
+    margin: auto;
+    height: 100vh;
+    height: 100dvh;
+    border-right: 1px solid #333;
+    border-left: 1px solid #333;
+}
+
+form.chat-form {
+    padding: min(2vw, 2rem);
+}
+
+input {
+    display: block;
+    width: 100%;
+    margin: 0 auto 0 auto;
+}
+
+textarea {
+    width: 100%;
+    resize: none;
+    height: 4rem;
+}
+
+form button {
+    width: 100%;
+}
