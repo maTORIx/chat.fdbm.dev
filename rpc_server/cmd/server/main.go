@@ -148,7 +148,7 @@ func announceToWatchList(discussion_id, hash string, newChat *chatv1.Chat) {
 
 	for _, info := range watchList[discussion_id] {
 		go func(info *WatchInfo) {
-			if info.Hash == hash {
+			if info != nil && info.Hash == hash {
 				info.StreamRes.Send(&chatv1.GetChatsStreamResponse{Chats: chats})
 			}
 		}(info)
