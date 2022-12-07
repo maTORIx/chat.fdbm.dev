@@ -34,17 +34,28 @@ function App() {
   const scrollToLatest = useCallback(() => {
     const chats = document.getElementById("chats-container")
     if (!chats) return;
-    chats.scroll(0, chats.scrollHeight)
+    chats.scroll(0, chats.scrollHeight - chats.clientHeight)
   }, [])
 
   const whenChatsUpdated = useEffect(() => {
     const container = document.getElementById("chats-container")
-    const lastChatElem = document.getElementById(`chat-${chats.slice(-2, -1)[0].id}`)
-    if (!container || isScrolled || !lastChatElem) {
-    } else if (container.scrollHeight === container.scrollTop + container.clientHeight - lastChatElem.clientHeight) {
+    if (isScrolled || !container || container.scrollHeight == container.clientHeight || chats.length < 1) {
       scrollToLatest()
+      setIsScrolled(true);
+      return;
     }
-    setIsScrolled(false)
+
+    const lastChatElem = document.getElementById(`chat-${chats.slice(-1)[0].id}`)
+    if (!lastChatElem) {
+      setIsScrolled(true)
+      return;
+    }
+    const inspectedBeforeScrollTop = container.scrollHeight - container.clientHeight - lastChatElem?.clientHeight
+    console.log(inspectedBeforeScrollTop, container.scrollTop)
+    if (inspectedBeforeScrollTop <= container.scrollTop) {
+      scrollToLatest()
+      setIsScrolled(true)
+    }
   }, [chats])
 
   let chatElements = [];
