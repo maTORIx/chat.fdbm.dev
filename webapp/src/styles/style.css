@@ -3,30 +3,149 @@ body {
 }
 
 .App {
-    width: 500px;
+    width: var(--app-width);
     margin: auto;
     height: 100vh;
     height: 100dvh;
-    border-right: 1px solid #333;
-    border-left: 1px solid #333;
+}
+
+.top-bar {
+    display: flex;
+    top: 0;
+    height: 45px;
+    justify-content: space-between;
+}
+
+.top-bar .profile {
+    width: 80%;
+    display: flex;
+    align-items: center;
+    justify-content: right;
+}
+
+.top-bar .profile img {
+    height: 100%;
+    display: inline-block;
+}
+
+.top-bar input {
+    display: inline-block;
+    width: 15rem;
+    margin: 0;
+    border: 0;
+    text-align: right;
+}
+
+.top-bar input:focus {
+    outline: none;
+    animation: opacity-change .1s linear 0s 3 normal;
+}
+
+@keyframes opacity-change {
+    from { opacity: 1;}
+    50% { opacity: 0;}
+    to { opacity: 1;}
 }
 
 form.chat-form {
-    padding: min(2vw, 2rem);
+    width: var(--app-width);
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    bottom: 30px;
+    border: 2px solid #333;
+    height: 40px;
+    border-radius: 20px;
+    overflow: hidden;
 }
 
-input {
+form.chat-form textarea {
+    resize: none;
+    width: calc(100% - 40px);
+    height: 100%;
+    border: 0;
+    padding: 7px 15px;
+}
+
+form.chat-form textarea:focus {
+    outline: none;
+}
+
+form.chat-form textarea::-webkit-scrollbar {
+    display: none;
+}
+
+form.chat-form button.submit {
+    width: 40px;
+    height: 40px;
+    border: 0;
+    border-left: 2px solid #333;
+    background-color: rgb(0,0,0);
+    color: #fff;
+}
+
+.chats-container {
+    height: calc(100vh - 115px);
+    height: calc(100dvh - 115px);
+    overflow-y: scroll;
+}
+
+.chats-container::-webkit-scrollbar {
+    display: none;
+}
+
+.chat-container {
+    display: flex;
+    padding-bottom: 1rem;
+}
+
+.chat-container .account-icon {
+    font-family: "Material Symbols Outlined";
+    font-size: 20px;
+    color: #fff;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background-color: #000;
+    text-align: center;
+}
+
+.chat-container .chat-body {
+    margin-left: .5rem;
+}
+
+.chat-container .chat-body .name {
+    font-size: .5rem;
+}
+
+.chat-container .chat-body .message {
+  border: 2px solid #333;
+  border-radius: 10px;
+  padding: .5rem;
+  white-space: break-spaces;
+}
+
+.chat-container .time {
+    margin-left: 5px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+}
+
+.chat-container .time {
+    width: 10px;
+    font-size: .5rem;
+}
+
+small {
+    font-family: "DotGothic16", sans-serif;
+    text-align: center;
     display: block;
     width: 100%;
-    margin: 0 auto 0 auto;
+    font-size: .5rem;
+    user-select: none;
 }
 
-textarea {
-    width: 100%;
-    resize: none;
-    height: 4rem;
-}
-
-form button {
-    width: 100%;
+:root {
+    --app-width: calc(100vw - 40px);
 }
