@@ -3,7 +3,7 @@
 /* eslint-disable */
 // @ts-nocheck
 
-import { GetChatsRequest, GetChatsResponse, GetChatsStreamRequest, GetChatsStreamResponse, GreetRequest, GreetResponse, SendChatRequest, SendChatResponse } from "./chat_pb.js";
+import { GetChatsRequest, GetChatsResponse, GetChatsStreamRequest, GetChatsStreamResponse, SendChatRequest, SendChatResponse } from "./chat_pb.js";
 import { MethodKind } from "@bufbuild/protobuf";
 
 /**
@@ -12,15 +12,6 @@ import { MethodKind } from "@bufbuild/protobuf";
 export const ChatService = {
   typeName: "chat.v1.ChatService",
   methods: {
-    /**
-     * @generated from rpc chat.v1.ChatService.Greet
-     */
-    greet: {
-      name: "Greet",
-      I: GreetRequest,
-      O: GreetResponse,
-      kind: MethodKind.Unary,
-    },
     /**
      * @generated from rpc chat.v1.ChatService.SendChat
      */

@@ -27,7 +27,6 @@ const (
 
 // ChatServiceClient is a client for the chat.v1.ChatService service.
 type ChatServiceClient interface {
-	Greet(context.Context, *connect_go.Request[v1.GreetRequest]) (*connect_go.Response[v1.GreetResponse], error)
 	SendChat(context.Context, *connect_go.Request[v1.SendChatRequest]) (*connect_go.Response[v1.SendChatResponse], error)
 	GetChats(context.Context, *connect_go.Request[v1.GetChatsRequest]) (*connect_go.Response[v1.GetChatsResponse], error)
 	GetChatsStream(context.Context, *connect_go.Request[v1.GetChatsStreamRequest]) (*connect_go.ServerStreamForClient[v1.GetChatsStreamResponse], error)
@@ -43,11 +42,6 @@ type ChatServiceClient interface {
 func NewChatServiceClient(httpClient connect_go.HTTPClient, baseURL string, opts ...connect_go.ClientOption) ChatServiceClient {
 	baseURL = strings.TrimRight(baseURL, "/")
 	return &chatServiceClient{
-		greet: connect_go.NewClient[v1.GreetRequest, v1.GreetResponse](
-			httpClient,
-			baseURL+"/chat.v1.ChatService/Greet",
-			opts...,
-		),
 		sendChat: connect_go.NewClient[v1.SendChatRequest, v1.SendChatResponse](
 			httpClient,
 			baseURL+"/chat.v1.ChatService/SendChat",
@@ -68,15 +62,9 @@ func NewChatServiceClient(httpClient connect_go.HTTPClient, baseURL string, opts
 
 // chatServiceClient implements ChatServiceClient.
 type chatServiceClient struct {
-	greet          *connect_go.Client[v1.GreetRequest, v1.GreetResponse]
 	sendChat       *connect_go.Client[v1.SendChatRequest, v1.SendChatResponse]
 	getChats       *connect_go.Client[v1.GetChatsRequest, v1.GetChatsResponse]
 	getChatsStream *connect_go.Client[v1.GetChatsStreamRequest, v1.GetChatsStreamResponse]
-}
-
-// Greet calls chat.v1.ChatService.Greet.
-func (c *chatServiceClient) Greet(ctx context.Context, req *connect_go.Request[v1.GreetRequest]) (*connect_go.Response[v1.GreetResponse], error) {
-	return c.greet.CallUnary(ctx, req)
 }
 
 // SendChat calls chat.v1.ChatService.SendChat.
@@ -96,7 +84,6 @@ func (c *chatServiceClient) GetChatsStream(ctx context.Context, req *connect_go.
 
 // ChatServiceHandler is an implementation of the chat.v1.ChatService service.
 type ChatServiceHandler interface {
-	Greet(context.Context, *connect_go.Request[v1.GreetRequest]) (*connect_go.Response[v1.GreetResponse], error)
 	SendChat(context.Context, *connect_go.Request[v1.SendChatRequest]) (*connect_go.Response[v1.SendChatResponse], error)
 	GetChats(context.Context, *connect_go.Request[v1.GetChatsRequest]) (*connect_go.Response[v1.GetChatsResponse], error)
 	GetChatsStream(context.Context, *connect_go.Request[v1.GetChatsStreamRequest], *connect_go.ServerStream[v1.GetChatsStreamResponse]) error
@@ -109,11 +96,6 @@ type ChatServiceHandler interface {
 // and JSON codecs. They also support gzip compression.
 func NewChatServiceHandler(svc ChatServiceHandler, opts ...connect_go.HandlerOption) (string, http.Handler) {
 	mux := http.NewServeMux()
-	mux.Handle("/chat.v1.ChatService/Greet", connect_go.NewUnaryHandler(
-		"/chat.v1.ChatService/Greet",
-		svc.Greet,
-		opts...,
-	))
 	mux.Handle("/chat.v1.ChatService/SendChat", connect_go.NewUnaryHandler(
 		"/chat.v1.ChatService/SendChat",
 		svc.SendChat,
@@ -134,10 +116,6 @@ func NewChatServiceHandler(svc ChatServiceHandler, opts ...connect_go.HandlerOpt
 
 // UnimplementedChatServiceHandler returns CodeUnimplemented from all methods.
 type UnimplementedChatServiceHandler struct{}
-
-func (UnimplementedChatServiceHandler) Greet(context.Context, *connect_go.Request[v1.GreetRequest]) (*connect_go.Response[v1.GreetResponse], error) {
-	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("chat.v1.ChatService.Greet is not implemented"))
-}
 
 func (UnimplementedChatServiceHandler) SendChat(context.Context, *connect_go.Request[v1.SendChatRequest]) (*connect_go.Response[v1.SendChatResponse], error) {
 	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("chat.v1.ChatService.SendChat is not implemented"))

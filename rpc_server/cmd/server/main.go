@@ -10,6 +10,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/bufbuild/connect-go"
@@ -24,7 +25,9 @@ import (
 	"github.com/matorix/chat.fdbm.dev/gen/chat/v1/chatv1connect"
 )
 
-var SECRET_KEY string = "SECRET_KEY"
+const SECRET_KEY string = "SECRET_KEY"
+const BODY_CHARS_LIMIT int = 10000
+const NAME_CHARS_LIMIT int = 10000
 
 type WatchInfo struct {
 	Hash      string
@@ -45,10 +48,12 @@ func InitializeDB(path string) error {
 	    create table if not exists chats (
 			id integer not null primary key autoincrement,
 			discussion_id string not null,
+			ip_address string not null,
+			user_id string not null,
 			name string not null,
 			message string not null,
 			hash string not null,
-			created_at string not null
+			created_at integer not null
 		);
 	`
 	_, err = db.Exec(initializeSql)
@@ -63,22 +68,49 @@ func generateHash(s, salt string) string {
 	return hex.EncodeToString(r[:])
 }
 
-func AddChat(chat *chatv1.SendChatRequest) error {
+func generateUserID(ip_address, salt string) string {
+	return generateHash(ip_address, salt)
+}
+
+func AddChat(chat *chatv1.SendChatRequest, ip_address string) error {
 	db, err := sql.Open("sqlite3", "./database.db")
 	if err != nil {
 		return err
 	}
 	defer db.Close()
 
-	utcTime := strconv.Itoa(int(time.Now().UnixMilli()))
-	hash := generateHash(chat.LowPassword, SECRET_KEY)
+	if len(chat.Body) > BODY_CHARS_LIMIT {
+		return fmt.Errorf("error: %s", "Body is too long.")
+	} else if len(chat.Name) > NAME_CHARS_LIMIT {
+		return fmt.Errorf("error: %s", "Name is too long.")
+	}
 
-	insertSql := `insert into chats(discussion_id, name, message, hash, created_at) values (?, ?, ?, ?, ?)`
+	utcTime := int32(time.Now().UnixMilli())
+	hash := generateHash(chat.DiscussionInfo.LowPassword, SECRET_KEY)
+	user_id := generateUserID(ip_address, SECRET_KEY)
+
+	insertSql := `insert into chats(
+            discussion_id,
+			ip_address,
+			user_id,
+			name,
+			message,
+			hash,
+			created_at
+		) values (?, ?, ?, ?, ?, ?, ?)`
 	stmt, err := db.Prepare(insertSql)
 	if err != nil {
 		return err
 	}
-	result, err := stmt.Exec(chat.DiscussionId, chat.Name, chat.Message, hash, utcTime)
+	result, err := stmt.Exec(
+		chat.DiscussionInfo.Id,
+		ip_address,
+		user_id,
+		chat.Name,
+		chat.Body,
+		hash,
+		utcTime,
+	)
 	if err != nil {
 		return err
 	}
@@ -86,10 +118,11 @@ func AddChat(chat *chatv1.SendChatRequest) error {
 	if err != nil {
 		return err
 	}
-	announceToWatchList(chat.DiscussionId, hash, &chatv1.Chat{
+	announceToWatchList(chat.DiscussionInfo.Id, hash, &chatv1.Chat{
 		Id:        strconv.Itoa(int(chatId)),
+		UserId:    user_id,
 		Name:      chat.Name,
-		Message:   chat.Message,
+		Body:      chat.Body,
 		CreatedAt: utcTime,
 	})
 	return nil
@@ -103,14 +136,14 @@ func ListChat(info *chatv1.GetChatsRequest) ([]*chatv1.Chat, error) {
 	defer db.Close()
 
 	// listSql := `select id, name, message, created_at from chats`
-	listSql := `select id, name, message, created_at from chats where discussion_id = ? and hash = ?`
+	listSql := `select id, user_id, name, message, created_at from chats where discussion_id = ? and hash = ?`
 	stmt, err := db.Prepare(listSql)
 	if err != nil {
 		return nil, err
 	}
 	// rows, err := stmt.Query()
-	hash := generateHash(info.LowPassword, SECRET_KEY)
-	rows, err := stmt.Query(info.DiscussionId, hash)
+	hash := generateHash(info.DiscussionInfo.LowPassword, SECRET_KEY)
+	rows, err := stmt.Query(info.DiscussionInfo.Id, hash)
 	if err != nil {
 		if !errors.Is(err, sql.ErrNoRows) {
 			return nil, connect.NewError(connect.CodeInvalidArgument, err)
@@ -121,7 +154,7 @@ func ListChat(info *chatv1.GetChatsRequest) ([]*chatv1.Chat, error) {
 	defer rows.Close()
 	for rows.Next() {
 		chat := &chatv1.Chat{}
-		if err := rows.Scan(&chat.Id, &chat.Name, &chat.Message, &chat.CreatedAt); err != nil {
+		if err := rows.Scan(&chat.Id, &chat.UserId, &chat.Name, &chat.Body, &chat.CreatedAt); err != nil {
 			return nil, err
 		}
 		chats = append(chats, chat)
@@ -131,27 +164,27 @@ func ListChat(info *chatv1.GetChatsRequest) ([]*chatv1.Chat, error) {
 
 func addWatchList(discussion_id string, info *WatchInfo) string {
 	id, _ := uuid.NewUUID()
-	strid := id.String()
+	watchId := id.String()
 	if _, ok := watchList[discussion_id]; !ok {
 		watchList[discussion_id] = map[string]*WatchInfo{}
 	}
-	watchList[discussion_id][strid] = info
-	return strid
+	watchList[discussion_id][watchId] = info
+	return watchId
 }
 
 func announceToWatchList(discussion_id, hash string, newChat *chatv1.Chat) {
 	if _, ok := watchList[discussion_id]; !ok {
 		return
 	}
-	var chats []*chatv1.Chat
-	chats = append(chats, newChat)
-
-	for _, info := range watchList[discussion_id] {
-		go func(info *WatchInfo) {
+	for watchId, info := range watchList[discussion_id] {
+		go func(info *WatchInfo, watchId string) {
 			if info != nil && info.Hash == hash {
-				info.StreamRes.Send(&chatv1.GetChatsStreamResponse{Chats: chats})
+				err := info.StreamRes.Send(&chatv1.GetChatsStreamResponse{Chat: newChat})
+				if err != nil {
+					watchList[discussion_id][watchId] = nil
+				}
 			}
-		}(info)
+		}(info, watchId)
 	}
 }
 
@@ -159,24 +192,12 @@ func announceToWatchList(discussion_id, hash string, newChat *chatv1.Chat) {
 
 type ChatServer struct{}
 
-func (s *ChatServer) Greet(
-	ctx context.Context,
-	req *connect.Request[chatv1.GreetRequest],
-) (*connect.Response[chatv1.GreetResponse], error) {
-	log.Println("Request headers: ", req.Header())
-	res := connect.NewResponse(&chatv1.GreetResponse{
-		Greeting: fmt.Sprintf("Hello, %s!", req.Msg.Name),
-	})
-	res.Header().Set("Chat-Version", "v1")
-	return res, nil
-}
-
 func (s *ChatServer) SendChat(
 	ctx context.Context,
 	req *connect.Request[chatv1.SendChatRequest],
 ) (*connect.Response[chatv1.SendChatResponse], error) {
 	log.Println("Request headers: ", req.Header())
-	err := AddChat(req.Msg)
+	err := AddChat(req.Msg, strings.Split(req.Peer().Addr, ":")[0])
 	if err != nil {
 		log.Fatal("error")
 		return nil, connect.NewError(connect.CodeUnknown, err)
@@ -206,18 +227,14 @@ func (s *ChatServer) GetChatsStream(
 ) error {
 	log.Println("Request headers: ", req.Header())
 
-	discussionId := req.Msg.DiscussionId
-	lowPassword := req.Msg.LowPassword
-	watchId := addWatchList(discussionId, &WatchInfo{
+	discussionId := req.Msg.DiscussionInfo.Id
+	lowPassword := req.Msg.DiscussionInfo.LowPassword
+	addWatchList(discussionId, &WatchInfo{
 		Hash:      generateHash(lowPassword, SECRET_KEY),
 		StreamRes: streamRes,
 	})
 	for {
-		err := streamRes.Send(&chatv1.GetChatsStreamResponse{Chats: []*chatv1.Chat{}})
-		if err != nil {
-			watchList[discussionId][watchId] = nil
-			return connect.NewError(connect.CodeInternal, err)
-		}
+
 		time.Sleep(time.Second * 30)
 	}
 }

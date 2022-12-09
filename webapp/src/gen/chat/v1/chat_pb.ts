@@ -7,87 +7,13 @@ import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialM
 import { Message, proto3 } from "@bufbuild/protobuf";
 
 /**
- * @generated from message chat.v1.GreetRequest
- */
-export class GreetRequest extends Message<GreetRequest> {
-  /**
-   * @generated from field: string name = 1;
-   */
-  name = "";
-
-  constructor(data?: PartialMessage<GreetRequest>) {
-    super();
-    proto3.util.initPartial(data, this);
-  }
-
-  static readonly runtime = proto3;
-  static readonly typeName = "chat.v1.GreetRequest";
-  static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    { no: 1, name: "name", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-  ]);
-
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GreetRequest {
-    return new GreetRequest().fromBinary(bytes, options);
-  }
-
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): GreetRequest {
-    return new GreetRequest().fromJson(jsonValue, options);
-  }
-
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): GreetRequest {
-    return new GreetRequest().fromJsonString(jsonString, options);
-  }
-
-  static equals(a: GreetRequest | PlainMessage<GreetRequest> | undefined, b: GreetRequest | PlainMessage<GreetRequest> | undefined): boolean {
-    return proto3.util.equals(GreetRequest, a, b);
-  }
-}
-
-/**
- * @generated from message chat.v1.GreetResponse
- */
-export class GreetResponse extends Message<GreetResponse> {
-  /**
-   * @generated from field: string greeting = 1;
-   */
-  greeting = "";
-
-  constructor(data?: PartialMessage<GreetResponse>) {
-    super();
-    proto3.util.initPartial(data, this);
-  }
-
-  static readonly runtime = proto3;
-  static readonly typeName = "chat.v1.GreetResponse";
-  static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    { no: 1, name: "greeting", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-  ]);
-
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GreetResponse {
-    return new GreetResponse().fromBinary(bytes, options);
-  }
-
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): GreetResponse {
-    return new GreetResponse().fromJson(jsonValue, options);
-  }
-
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): GreetResponse {
-    return new GreetResponse().fromJsonString(jsonString, options);
-  }
-
-  static equals(a: GreetResponse | PlainMessage<GreetResponse> | undefined, b: GreetResponse | PlainMessage<GreetResponse> | undefined): boolean {
-    return proto3.util.equals(GreetResponse, a, b);
-  }
-}
-
-/**
  * @generated from message chat.v1.SendChatRequest
  */
 export class SendChatRequest extends Message<SendChatRequest> {
   /**
-   * @generated from field: string discussion_id = 1;
+   * @generated from field: chat.v1.DiscussionInfo discussion_info = 1;
    */
-  discussionId = "";
+  discussionInfo?: DiscussionInfo;
 
   /**
    * @generated from field: string name = 2;
@@ -95,14 +21,9 @@ export class SendChatRequest extends Message<SendChatRequest> {
   name = "";
 
   /**
-   * @generated from field: string message = 3;
+   * @generated from field: string body = 3;
    */
-  message = "";
-
-  /**
-   * @generated from field: string low_password = 4;
-   */
-  lowPassword = "";
+  body = "";
 
   constructor(data?: PartialMessage<SendChatRequest>) {
     super();
@@ -112,10 +33,9 @@ export class SendChatRequest extends Message<SendChatRequest> {
   static readonly runtime = proto3;
   static readonly typeName = "chat.v1.SendChatRequest";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    { no: 1, name: "discussion_id", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 1, name: "discussion_info", kind: "message", T: DiscussionInfo },
     { no: 2, name: "name", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 3, name: "message", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 4, name: "low_password", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: "body", kind: "scalar", T: 9 /* ScalarType.STRING */ },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): SendChatRequest {
@@ -167,18 +87,104 @@ export class SendChatResponse extends Message<SendChatResponse> {
 }
 
 /**
- * @generated from message chat.v1.GetChatsRequest
+ * @generated from message chat.v1.PageInfo
  */
-export class GetChatsRequest extends Message<GetChatsRequest> {
+export class PageInfo extends Message<PageInfo> {
   /**
-   * @generated from field: string discussion_id = 1;
+   * @generated from field: string offset_id = 1;
    */
-  discussionId = "";
+  offsetId = "";
+
+  /**
+   * @generated from field: int32 rows = 2;
+   */
+  rows = 0;
+
+  constructor(data?: PartialMessage<PageInfo>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime = proto3;
+  static readonly typeName = "chat.v1.PageInfo";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "offset_id", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: "rows", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): PageInfo {
+    return new PageInfo().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): PageInfo {
+    return new PageInfo().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): PageInfo {
+    return new PageInfo().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: PageInfo | PlainMessage<PageInfo> | undefined, b: PageInfo | PlainMessage<PageInfo> | undefined): boolean {
+    return proto3.util.equals(PageInfo, a, b);
+  }
+}
+
+/**
+ * @generated from message chat.v1.DiscussionInfo
+ */
+export class DiscussionInfo extends Message<DiscussionInfo> {
+  /**
+   * @generated from field: string id = 1;
+   */
+  id = "";
 
   /**
    * @generated from field: string low_password = 2;
    */
   lowPassword = "";
+
+  constructor(data?: PartialMessage<DiscussionInfo>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime = proto3;
+  static readonly typeName = "chat.v1.DiscussionInfo";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "id", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: "low_password", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): DiscussionInfo {
+    return new DiscussionInfo().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): DiscussionInfo {
+    return new DiscussionInfo().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): DiscussionInfo {
+    return new DiscussionInfo().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: DiscussionInfo | PlainMessage<DiscussionInfo> | undefined, b: DiscussionInfo | PlainMessage<DiscussionInfo> | undefined): boolean {
+    return proto3.util.equals(DiscussionInfo, a, b);
+  }
+}
+
+/**
+ * @generated from message chat.v1.GetChatsRequest
+ */
+export class GetChatsRequest extends Message<GetChatsRequest> {
+  /**
+   * @generated from field: chat.v1.DiscussionInfo discussion_info = 1;
+   */
+  discussionInfo?: DiscussionInfo;
+
+  /**
+   * @generated from field: chat.v1.PageInfo pageing_info = 2;
+   */
+  pageingInfo?: PageInfo;
 
   constructor(data?: PartialMessage<GetChatsRequest>) {
     super();
@@ -188,8 +194,8 @@ export class GetChatsRequest extends Message<GetChatsRequest> {
   static readonly runtime = proto3;
   static readonly typeName = "chat.v1.GetChatsRequest";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    { no: 1, name: "discussion_id", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 2, name: "low_password", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 1, name: "discussion_info", kind: "message", T: DiscussionInfo },
+    { no: 2, name: "pageing_info", kind: "message", T: PageInfo },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GetChatsRequest {
@@ -219,19 +225,24 @@ export class Chat extends Message<Chat> {
   id = "";
 
   /**
+   * @generated from field: string user_id = 2;
+   */
+  userId = "";
+
+  /**
    * @generated from field: string name = 3;
    */
   name = "";
 
   /**
-   * @generated from field: string message = 4;
+   * @generated from field: string body = 4;
    */
-  message = "";
+  body = "";
 
   /**
-   * @generated from field: string created_at = 5;
+   * @generated from field: int32 created_at = 5;
    */
-  createdAt = "";
+  createdAt = 0;
 
   constructor(data?: PartialMessage<Chat>) {
     super();
@@ -242,9 +253,10 @@ export class Chat extends Message<Chat> {
   static readonly typeName = "chat.v1.Chat";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
     { no: 1, name: "id", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: "user_id", kind: "scalar", T: 9 /* ScalarType.STRING */ },
     { no: 3, name: "name", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 4, name: "message", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 5, name: "created_at", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 4, name: "body", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 5, name: "created_at", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): Chat {
@@ -306,14 +318,9 @@ export class GetChatsResponse extends Message<GetChatsResponse> {
  */
 export class GetChatsStreamRequest extends Message<GetChatsStreamRequest> {
   /**
-   * @generated from field: string discussion_id = 1;
+   * @generated from field: chat.v1.DiscussionInfo discussion_info = 1;
    */
-  discussionId = "";
-
-  /**
-   * @generated from field: string low_password = 2;
-   */
-  lowPassword = "";
+  discussionInfo?: DiscussionInfo;
 
   constructor(data?: PartialMessage<GetChatsStreamRequest>) {
     super();
@@ -323,8 +330,7 @@ export class GetChatsStreamRequest extends Message<GetChatsStreamRequest> {
   static readonly runtime = proto3;
   static readonly typeName = "chat.v1.GetChatsStreamRequest";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    { no: 1, name: "discussion_id", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 2, name: "low_password", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 1, name: "discussion_info", kind: "message", T: DiscussionInfo },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GetChatsStreamRequest {
@@ -349,9 +355,9 @@ export class GetChatsStreamRequest extends Message<GetChatsStreamRequest> {
  */
 export class GetChatsStreamResponse extends Message<GetChatsStreamResponse> {
   /**
-   * @generated from field: repeated chat.v1.Chat chats = 1;
+   * @generated from field: chat.v1.Chat chat = 1;
    */
-  chats: Chat[] = [];
+  chat?: Chat;
 
   constructor(data?: PartialMessage<GetChatsStreamResponse>) {
     super();
@@ -361,7 +367,7 @@ export class GetChatsStreamResponse extends Message<GetChatsStreamResponse> {
   static readonly runtime = proto3;
   static readonly typeName = "chat.v1.GetChatsStreamResponse";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    { no: 1, name: "chats", kind: "message", T: Chat, repeated: true },
+    { no: 1, name: "chat", kind: "message", T: Chat },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GetChatsStreamResponse {

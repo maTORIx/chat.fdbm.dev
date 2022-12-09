@@ -4,7 +4,7 @@ body {
 
 .App {
     width: var(--app-width);
-    margin: auto;
+    padding: 0px 20px;
     height: 100vh;
     height: 100dvh;
 }
@@ -48,7 +48,7 @@ body {
 }
 
 form.chat-form {
-    width: var(--app-width);
+    width: 100%;
     display: flex;
     justify-content: space-around;
     align-items: center;
@@ -144,8 +144,41 @@ small {
     width: 100%;
     font-size: .5rem;
     user-select: none;
+    height: 15px;
+}
+
+.suggest-latest {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    height: 0px;
+    /* left: calc((100% - 195px) / 2); */
+    bottom: 50px;
+}
+
+.suggest-latest p {
+    display: flex;
+    width: 195px;
+    height: 30px;
+    justify-content: center;
+    background-color: #fff;
+    border: 2px solid #333;
+    opacity: 0.8;
+    border-radius: 15px;
+    font-size: 12px;
+    padding: 4px 0px;
+}
+
+.suggest-latest p span {
+    font-size: 14px;
+    margin-right: 4px;
+    transform: translateY(2px);
+}
+
+.suggest-latest.hidden {
+    display: none;
 }
 
 :root {
-    --app-width: calc(100vw - 40px);
+    --app-width: calc(100vw);
 }

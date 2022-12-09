@@ -1,5 +1,8 @@
+import CryptoJS from "crypto-js"
 import { Chat } from "./gen/chat/v1/chat_pb";
 import { client } from "./client";
+
+const SALT = "rnP3dHk$0zS.?'!jkr)ytjjj"
 
 export class ChatsManager {
   discussionId: string;
@@ -19,20 +22,37 @@ export class ChatsManager {
 
   async getChats() {
     let resp = await client.getChats({
-      discussionId: this.discussionId,
-      lowPassword: this.lowPassword,
+      discussionInfo: {
+        id: this.discussionId,
+        lowPassword: this.lowPassword,
+      }
     });
+    resp.chats.forEach((val, idx) => val.body = this.decryptMessage(val.body))
     this.chats = resp.chats;
     this.onChange();
   }
 
+  encryptMessage(message: string): string {
+    return CryptoJS.AES.encrypt(message, this.lowPassword + SALT).toString()
+  }
+
+  decryptMessage(message: string): string {
+    return CryptoJS.AES.decrypt(message, this.lowPassword + SALT).toString(CryptoJS.enc.Utf8)
+  }
+
   async watchChatsStreaming() {
     let iter = client.getChatsStream({
-      discussionId: this.discussionId,
-      lowPassword: this.lowPassword,
+      discussionInfo: {
+        id: this.discussionId,
+        lowPassword: this.lowPassword,
+      }
     });
     for await (let resp of iter) {
-      this.chats = this.chats.concat(resp.chats);
+      if (!resp.chat) {
+        continue
+      }
+      resp.chat.body = this.decryptMessage(resp.chat.body)
+      this.chats.push(resp.chat);
       this.onChange();
     }
   }
@@ -49,10 +69,12 @@ export class ChatsManager {
 
   send(name: string, message: string) {
     return client.sendChat({
-      discussionId: this.discussionId,
+      discussionInfo: {
+        id: this.discussionId,
+        lowPassword: this.lowPassword
+      },
       name: name,
-      message: message,
-      lowPassword: this.lowPassword,
+      body: this.encryptMessage(message),
     });
   }
 }
