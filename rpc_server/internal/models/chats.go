@@ -179,8 +179,8 @@ func (model *ChatModel) ExecListQueryWithOffset(discussionId, hash string, limit
 	}
 	defer db.Close()
 	listSql := `select id, user_id, name, message, created_at from chats 
-	where discussion_id = ? and hash = ? and (created_at < ? or (created_at = ? and id < ?)) 
-	order by created_at desc, id asc
+	where discussion_id = ? and hash = ? and (created_at < ? or (created_at <= ? and id < ?)) 
+	order by created_at desc, id desc
 	limit ?;`
 	stmt, err := db.Prepare(listSql)
 	if err != nil {

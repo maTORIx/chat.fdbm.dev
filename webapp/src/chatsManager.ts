@@ -17,15 +17,12 @@ export class ChatsManager {
     this.hashedPassword = CryptoJS.SHA256(this.lowPassword).toString(CryptoJS.enc.Base64);
     this.chats = [];
     this.callbacks = [];
-
-    this.getChats();
-    this.watchChatsStreaming();
   }
 
-  async getChats(limit=10) {
+  async getChats(limit=20) {
     let pageingInfo = {limit: limit, cursor: "", earlierAt: 0}
     if (this.chats.length > 0) {
-      pageingInfo.cursor = this.chats.slice(-1)[0].id
+      pageingInfo.cursor = this.chats[0].id
       pageingInfo.earlierAt = this.chats[0].createdAt
     }
     let resp = await client.getChats({
@@ -39,7 +36,7 @@ export class ChatsManager {
     resp.chats = resp.chats.reverse()
     this.chats = resp.chats.concat(this.chats);
     this.onChange();
-    return resp.chats
+    return this.chats
   }
 
   encryptMessage(message: string): string {
