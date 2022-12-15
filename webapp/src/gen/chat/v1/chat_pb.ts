@@ -91,14 +91,19 @@ export class SendChatResponse extends Message<SendChatResponse> {
  */
 export class PageInfo extends Message<PageInfo> {
   /**
-   * @generated from field: string offset_id = 1;
+   * @generated from field: string cursor = 1;
    */
-  offsetId = "";
+  cursor = "";
 
   /**
-   * @generated from field: int32 rows = 2;
+   * @generated from field: int32 limit = 2;
    */
-  rows = 0;
+  limit = 0;
+
+  /**
+   * @generated from field: int32 earlier_at = 3;
+   */
+  earlierAt = 0;
 
   constructor(data?: PartialMessage<PageInfo>) {
     super();
@@ -108,8 +113,9 @@ export class PageInfo extends Message<PageInfo> {
   static readonly runtime = proto3;
   static readonly typeName = "chat.v1.PageInfo";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    { no: 1, name: "offset_id", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 2, name: "rows", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
+    { no: 1, name: "cursor", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: "limit", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
+    { no: 3, name: "earlier_at", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): PageInfo {

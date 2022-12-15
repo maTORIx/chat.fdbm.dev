@@ -1,0 +1,9 @@
+{
+  "SECRET_KEY": "3k69xkjcreuK#",
+  "database": {
+    "chat": {
+      "BODY_LENGTH_LIMIT": 10000,
+      "NAME_LENGTH_LIMIT": 14
+    }
+  }
+}

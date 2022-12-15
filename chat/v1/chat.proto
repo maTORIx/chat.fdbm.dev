@@ -14,8 +14,9 @@ message SendChatResponse {
 }
 
 message PageInfo {
-    string offset_id=1;
-    int32 rows=2;
+    string cursor=1;
+    int32 limit=2;
+    int32 earlier_at=3;
 }
 
 message DiscussionInfo {

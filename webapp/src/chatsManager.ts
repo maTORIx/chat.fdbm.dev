@@ -7,12 +7,14 @@ const SALT = "rnP3dHk$0zS.?'!jkr)ytjjj"
 export class ChatsManager {
   discussionId: string;
   lowPassword: string;
+  hashedPassword: string;
   private chats: Chat[];
   private callbacks: ((chats: Chat[]) => void)[];
 
   constructor(discussionId: string, lowPassword: string) {
     this.discussionId = discussionId;
     this.lowPassword = lowPassword;
+    this.hashedPassword = CryptoJS.SHA256(this.lowPassword).toString(CryptoJS.enc.Base64);
     this.chats = [];
     this.callbacks = [];
 
@@ -20,16 +22,24 @@ export class ChatsManager {
     this.watchChatsStreaming();
   }
 
-  async getChats() {
+  async getChats(limit=10) {
+    let pageingInfo = {limit: limit, cursor: "", earlierAt: 0}
+    if (this.chats.length > 0) {
+      pageingInfo.cursor = this.chats.slice(-1)[0].id
+      pageingInfo.earlierAt = this.chats[0].createdAt
+    }
     let resp = await client.getChats({
       discussionInfo: {
         id: this.discussionId,
-        lowPassword: this.lowPassword,
-      }
+        lowPassword: this.hashedPassword,
+      },
+      pageingInfo: pageingInfo
     });
     resp.chats.forEach((val, idx) => val.body = this.decryptMessage(val.body))
-    this.chats = resp.chats;
+    resp.chats = resp.chats.reverse()
+    this.chats = resp.chats.concat(this.chats);
     this.onChange();
+    return resp.chats
   }
 
   encryptMessage(message: string): string {
@@ -44,7 +54,7 @@ export class ChatsManager {
     let iter = client.getChatsStream({
       discussionInfo: {
         id: this.discussionId,
-        lowPassword: this.lowPassword,
+        lowPassword: this.hashedPassword,
       }
     });
     for await (let resp of iter) {
@@ -71,7 +81,7 @@ export class ChatsManager {
     return client.sendChat({
       discussionInfo: {
         id: this.discussionId,
-        lowPassword: this.lowPassword
+        lowPassword: this.hashedPassword
       },
       name: name,
       body: this.encryptMessage(message),
