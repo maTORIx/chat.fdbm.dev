@@ -17,12 +17,12 @@ import (
 	chatv1 "github.com/matorix/chat.fdbm.dev/gen/chat/v1"
 	"github.com/matorix/chat.fdbm.dev/gen/chat/v1/chatv1connect"
 	"github.com/matorix/chat.fdbm.dev/internal/config"
+	"github.com/matorix/chat.fdbm.dev/internal/controllers"
 	"github.com/matorix/chat.fdbm.dev/internal/models"
-	"github.com/matorix/chat.fdbm.dev/internal/pubsub"
 	"github.com/matorix/chat.fdbm.dev/internal/utils"
 )
 
-var chatsPubSub *pubsub.ChatsPubSub
+var chatsController controllers.ChatsController
 
 func InitializeDB() error {
 	chatModel := &models.ChatModel{}
@@ -32,49 +32,6 @@ func InitializeDB() error {
 	return nil
 }
 
-func AddChat(chat *chatv1.SendChatRequest, ip_address string) error {
-	chatModel := &models.ChatModel{}
-	newChat, err := chatModel.Create(chat.DiscussionInfo.Id, chat.Name, chat.Body, ip_address, chat.DiscussionInfo.LowPassword)
-	if err != nil {
-		return err
-	}
-
-	chatsPubSub.Publish(newChat.DiscussionId, newChat.Hash, &chatv1.Chat{
-		Id:        newChat.Id,
-		UserId:    newChat.Uid,
-		Name:      newChat.Name,
-		Body:      newChat.Body,
-		CreatedAt: newChat.CreatedAt,
-	})
-	return nil
-}
-
-func ListChat(info *chatv1.GetChatsRequest) ([]*chatv1.Chat, error) {
-	chatModel := &models.ChatModel{}
-	chats, err := chatModel.List(
-		info.DiscussionInfo.Id,
-		info.DiscussionInfo.LowPassword,
-		&info.PageingInfo.Cursor,
-		int(info.PageingInfo.Limit),
-		info.PageingInfo.EarlierAt,
-	)
-	if err != nil {
-		return nil, err
-	}
-	result := []*chatv1.Chat{}
-	for _, v := range chats {
-		result = append(result, &chatv1.Chat{
-			Id:        v.Id,
-			UserId:    v.Uid,
-			Name:      v.Name,
-			Body:      v.Body,
-			CreatedAt: v.CreatedAt,
-		})
-	}
-
-	return result, nil
-}
-
 type ChatServer struct{}
 
 func (s *ChatServer) SendChat(
@@ -82,10 +39,9 @@ func (s *ChatServer) SendChat(
 	req *connect.Request[chatv1.SendChatRequest],
 ) (*connect.Response[chatv1.SendChatResponse], error) {
 	log.Println("Request headers: ", req.Header())
-	err := AddChat(req.Msg, strings.Split(req.Peer().Addr, ":")[0])
+	err := chatsController.AddChat(req.Msg, strings.Split(req.Peer().Addr, ":")[0])
 	if err != nil {
-		log.Fatal("error")
-		return nil, connect.NewError(connect.CodeUnknown, err)
+		return nil, connect.NewError(connect.CodeInternal, err)
 	}
 	res := connect.NewResponse(&chatv1.SendChatResponse{})
 	res.Header().Set("Chat-Version", "v1")
@@ -97,7 +53,7 @@ func (s *ChatServer) GetChats(
 	req *connect.Request[chatv1.GetChatsRequest],
 ) (*connect.Response[chatv1.GetChatsResponse], error) {
 	log.Println("Request headers: ", req.Header())
-	chats, err := ListChat(req.Msg)
+	chats, err := chatsController.ListChat(req.Msg)
 	if err != nil {
 		return nil, connect.NewError(connect.CodeAborted, err)
 	}
@@ -114,9 +70,16 @@ func (s *ChatServer) GetChatsStream(
 
 	discussionId := req.Msg.DiscussionInfo.Id
 	hash := utils.GenerateHash(req.Msg.DiscussionInfo.LowPassword, config.SecretKey)
-	chatsPubSub.Subscribe(discussionId, hash, streamRes)
+	watchId := chatsController.Pubsub.Subscribe(discussionId, hash, streamRes)
 	for {
-		time.Sleep(time.Second * 30)
+		time.Sleep(time.Second * 60 * 3)
+		chatsController.Pubsub.Mu.RLock()
+		chatsController.Pubsub.WatchList[discussionId].Mu.RLock()
+		if chatsController.Pubsub.WatchList[discussionId].WatchList[watchId] == nil {
+			return nil
+		}
+		chatsController.Pubsub.WatchList[discussionId].Mu.RUnlock()
+		chatsController.Pubsub.Mu.RUnlock()
 	}
 }
 
@@ -125,7 +88,8 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	chatsPubSub = pubsub.NewChatsPubSub()
+
+	chatsController = controllers.NewChatsController()
 
 	server := &ChatServer{}
 	mux := http.NewServeMux()

@@ -39,6 +39,7 @@ export class ChatsManager {
     return this.chats
   }
 
+
   encryptMessage(message: string): string {
     return CryptoJS.AES.encrypt(message, this.lowPassword + SALT).toString()
   }

@@ -34,6 +34,8 @@ function App() {
   useEffect(() => {
     let firsttime = true;
     if (discussionId === null || !!chatsManager) return;
+    let lowPassword = window.localStorage.getItem("lowPassword")
+    if (lowPassword === null) lowPassword = ""
     chatsManager = new ChatsManager(discussionId, "");
     chatsManager.addEventListener((chats: Chat[]) => {
       setIsScrolled(false)
