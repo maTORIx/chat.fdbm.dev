@@ -61,9 +61,11 @@ func (model *ChatModel) Init() error {
 
 func (model *ChatModel) Create(discussionId, name, body, ipAddress, lowPassword string) (*Chat, error) {
 	if len(body) > config.BodyLengthLimit {
-		return nil, fmt.Errorf("error: %s", "Body is too long.")
+		return nil, fmt.Errorf("error: Body is too long")
 	} else if len(name) > config.NameLengthLimit {
-		return nil, fmt.Errorf("error: %s", "Name is too long.")
+		return nil, fmt.Errorf("error: Name is too long")
+	} else if len(discussionId) > config.DiscussionIdLimit {
+		return nil, fmt.Errorf(("error: DiscussionId is too long"))
 	}
 
 	createdAt := int32(time.Now().UnixMilli())
