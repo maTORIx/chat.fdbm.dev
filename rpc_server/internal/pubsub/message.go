@@ -1,6 +1,7 @@
 package pubsub
 
 import (
+	"log"
 	"sync"
 
 	"github.com/bufbuild/connect-go"
@@ -9,19 +10,12 @@ import (
 )
 
 type ChatsPubSub struct {
-	Mu        *sync.RWMutex
-	WatchList map[string]*SubWatchList
-}
-
-type SubWatchList struct {
-	Mu        *sync.RWMutex
-	WatchList map[string]*MessageSubscriberInfo
+	WatchList sync.Map
 }
 
 func NewChatsPubSub() *ChatsPubSub {
 	return &ChatsPubSub{
-		Mu:        &sync.RWMutex{},
-		WatchList: map[string]*SubWatchList{},
+		WatchList: sync.Map{},
 	}
 }
 
@@ -33,40 +27,48 @@ type MessageSubscriberInfo struct {
 func (ps *ChatsPubSub) Subscribe(discussionId, hash string, stream *connect.ServerStream[chatv1.GetChatsStreamResponse]) string {
 	id, _ := uuid.NewUUID()
 	watchId := id.String()
-	ps.Mu.Lock()
-	if _, ok := ps.WatchList[discussionId]; !ok {
-		ps.WatchList[discussionId] = &SubWatchList{
-			Mu:        &sync.RWMutex{},
-			WatchList: map[string]*MessageSubscriberInfo{},
-		}
+	v, _ := ps.WatchList.LoadOrStore(discussionId, &sync.Map{})
+	sub, ok := v.(*sync.Map)
+	if !ok {
+		log.Fatal("fatal error: unexpected error occur")
 	}
-	ps.Mu.Unlock()
-
-	ps.WatchList[discussionId].Mu.Lock()
-	defer ps.WatchList[discussionId].Mu.Unlock()
-	ps.WatchList[discussionId].WatchList[watchId] = &MessageSubscriberInfo{
+	sub.Store(watchId, &MessageSubscriberInfo{
 		Hash:      hash,
 		StreamRes: stream,
-	}
+	})
 	return watchId
 }
 
-func (ps *ChatsPubSub) Publish(discussion_id, hash string, newChat *chatv1.Chat) {
-	if _, ok := ps.WatchList[discussion_id]; !ok {
+func (ps *ChatsPubSub) Publish(discussionId, hash string, newChat *chatv1.Chat) {
+	v, ok := ps.WatchList.Load(discussionId)
+	if !ok {
 		return
 	}
-	ps.WatchList[discussion_id].Mu.RLock()
-	for watchId, info := range ps.WatchList[discussion_id].WatchList {
-		go func(info *MessageSubscriberInfo, watchId string) {
-			if info != nil && info.Hash == hash {
-				err := info.StreamRes.Send(&chatv1.GetChatsStreamResponse{Chat: newChat})
-				if err != nil {
-					ps.WatchList[discussion_id].Mu.Lock()
-					ps.WatchList[discussion_id].WatchList[watchId] = nil
-					ps.WatchList[discussion_id].Mu.Unlock()
-				}
+	sub, _ := v.(*sync.Map)
+	sub.Range(func(key any, v any) bool {
+		info, _ := v.(*MessageSubscriberInfo)
+		watchId, _ := key.(string)
+
+		if info != nil && info.Hash == hash {
+			err := info.StreamRes.Send(&chatv1.GetChatsStreamResponse{Chat: newChat})
+			if err != nil {
+				sub.Delete(watchId)
 			}
-		}(info, watchId)
+		}
+		return true
+	})
+}
+
+func (ps *ChatsPubSub) IsDisconnected(discussionId, watchId string) bool {
+	v, ok := ps.WatchList.Load(discussionId)
+	if !ok {
+		return true
 	}
-	ps.WatchList[discussion_id].Mu.RUnlock()
+	sub, _ := v.(*sync.Map)
+	w, sub_ok := sub.Load(watchId)
+	if !sub_ok {
+		return true
+	}
+	info, _ := w.(*MessageSubscriberInfo)
+	return info == nil
 }

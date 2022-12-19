@@ -73,13 +73,9 @@ func (s *ChatServer) GetChatsStream(
 	watchId := chatsController.Pubsub.Subscribe(discussionId, hash, streamRes)
 	for {
 		time.Sleep(time.Second * 60 * 3)
-		chatsController.Pubsub.Mu.RLock()
-		chatsController.Pubsub.WatchList[discussionId].Mu.RLock()
-		if chatsController.Pubsub.WatchList[discussionId].WatchList[watchId] == nil {
+		if chatsController.Pubsub.IsDisconnected(discussionId, watchId) {
 			return nil
 		}
-		chatsController.Pubsub.WatchList[discussionId].Mu.RUnlock()
-		chatsController.Pubsub.Mu.RUnlock()
 	}
 }
 

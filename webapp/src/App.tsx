@@ -1,19 +1,17 @@
-import { Value } from "@bufbuild/protobuf";
-import { ChangeEvent, useState, useEffect, useRef, useCallback, Reducer } from "react";
+import { ChangeEvent, useState, useEffect, useCallback} from "react";
+import { Chat } from "./gen/chat/v1/chat_pb";
 import { ChatsManager } from "./chatsManager";
 import { client } from "./client";
-import { Chat } from "./gen/chat/v1/chat_pb";
+import { PasswordModal } from "./components/passwordModal";
+import { generateRandomString, withEventValue } from "./utils";
 import "./styles/fonts.css";
 import "./styles/reset.css";
 import "./styles/style.css";
+import { ChatListElement } from "./components/chats";
 
 let chatsManager: ChatsManager;
 
-let userStylesDict: {
-  [user_id: string]: {
-    color: string
-  }
-} = {};
+
 
 function App() {
   const [name, setName] = useState("");
@@ -23,8 +21,6 @@ function App() {
   const [isLatestButtonSuggested, setIsLatestButtonSuggested] = useState(false)
   const [firsttime, setFirstrtime] = useState(true)
   const [lastScrollHeight, setLastScrollHeight] = useState(0)
-  const [isModalShown, setIsModalShown] = useState(false)
-  const [formLowPassword, setFormLowPassword] = useState("")
 
   const url = new URL(window.location.href);
   const discussionId = url.searchParams.get("d");
@@ -53,6 +49,7 @@ function App() {
     container.scroll(0, container.scrollHeight - container.clientHeight)
   }, [])
 
+  // scroll suggest or scroll ajustment function
   useEffect(() => {
     const conn = document.getElementById("chats-container")
     const latestChat = chats.length > 0 ? document.getElementById(`chat-${chats.slice(-1)[0].id}`) : null
@@ -74,11 +71,6 @@ function App() {
     return () => { }
   }, [chats, isScrolled])
 
-  // set chats
-  let chatElements = [];
-  for (let chat of chats) {
-    chatElements.push(<ChatElement key={chat.id} chat={chat} />);
-  }
 
   const onSubmit = useCallback(async (e: { preventDefault: () => void; }) => {
     e.preventDefault();
@@ -105,41 +97,15 @@ function App() {
             <input name="name" onChange={withEventValue(setName)} value={name} placeholder="unknown" maxLength={14} />
             <span className="account-icon material-symbols-outlined">person</span>
           </label>
-          <button className="password-modal-button">
-            <span className="material-symbols-outlined" onClick={() => {
-              setIsModalShown(!isModalShown)
-            }}>key</span>
-
-          </button>
-        </div>
-      </div>
-      {/* PasswordModal */}
-      <div className="password-modal" hidden={!isModalShown}>
-        <div className="background" onClick={() => setIsModalShown(false)} />
-        <div className="container">
-          <h1>パスワードを設定する</h1>
-          <p>データは暗号化され、 共通のパスワードを知っている人のみが 利用できるようになります。</p>
-          <form onSubmit={(e) => {
-            e.preventDefault();
-            window.localStorage.setItem(`${discussionId}-lowPassword`, formLowPassword)
+          <PasswordModal onSubmit={(lowPassword) => {
+            window.localStorage.setItem(`${discussionId}-lowPassword`, lowPassword)
             location.reload()
-          }}>
-            <input type="password" placeholder="******" value={formLowPassword} onChange={withEventValue(setFormLowPassword)}/>
-            <button type="submit">
-              LOCK<span className="material-symbols-outlined">lock</span>
-            </button>
-          </form>
-          <p className="notice">※新たにパスワードを設定したチャットルームは全く別のものとして扱われるため、データは引き継がれません。</p>
-          <p className="notice">※パスワードが間違っていた際、注意書きは表示されません。あるはずのチャットが見つからないときは、誤ったパスワードを入力している可能性があります。</p>
-          <p className="notice">※パスワード管理アプリによって自動生成されたパスワードは比較的信頼性が高いといえます。ぜひご検討ください。</p>
+          }}/>
         </div>
       </div>
-      {/* Chats */}
-      <div className="chats-container" id="chats-container" onScroll={onScrollChats}>
-        {chatElements}
-      </div>
+      <ChatListElement onScroll={onScrollChats} chats={chats}/>
       {/* Suggest Latest Button */}
-      <div className={`suggest-latest ${isLatestButtonSuggested ? "" : "hidden"}`} onClick={() => {
+      <div className={`suggest-latest"}`} hidden={isLatestButtonSuggested} onClick={() => {
         setIsLatestButtonSuggested(false)
         scrollToLatest()
       }}>
@@ -153,6 +119,7 @@ function App() {
         className="chat-form"
         onSubmit={onSubmit}
         placeholder="Aa"
+        style={{height: `calc(${message.split("\n").length - 1} * 24px + 40px)`}}
       >
         <textarea
           name="message"
@@ -165,54 +132,6 @@ function App() {
       <small>© 2022 Takumi Jonen</small>
     </div>
   );
-}
-
-function withEventValue(f: Function): (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void {
-  return (e) => f(e.target.value);
-}
-
-function generateRandomString(len: Number): String {
-  const charList =
-    "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-  return Array.from(Array(len))
-    .map(() => charList[Math.floor(Math.random() * charList.length)])
-    .join("");
-}
-
-function generateRandomColorFromText(str: string): string {
-  if (str.length < 1) {
-    return "#ffffff";
-  }
-  while (str.length < 6) {
-    str += str
-  }
-  let result = [0, 0, 0, 0, 0, 0]
-  str.split("").forEach((v, idx) => result[idx % 6] += v.charCodeAt(0))
-  return "#" + result.map((v) => (v % 16).toString(16)).join("")
-}
-
-const ChatElement = (props: { chat: Chat }) => {
-  const chat = props.chat
-  if (!userStylesDict[chat.userId]) {
-    userStylesDict[chat.userId] = {
-      color: generateRandomColorFromText(chat.userId)
-    }
-  }
-
-  return (
-    <div id={`chat-${chat.id}`} className="chat-container">
-      <div className="account-icon" style={{ "backgroundColor": userStylesDict[chat.userId].color }}>
-        <p>person</p>
-      </div>
-      <div className="chat-body">
-        <p className="name">{chat.name}</p>
-        <p className="message">{chat.body}</p>
-      </div>
-      <div className="time">
-        <time>{new Date(chat.createdAt).toLocaleTimeString().slice(0, -3)}</time>
-      </div>
-    </div>
-  )
 }
 
 export default App;

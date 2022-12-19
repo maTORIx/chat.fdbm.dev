@@ -1,0 +1,52 @@
+.chats-container {
+    height: calc(100vh - 115px);
+    height: calc(100dvh - 115px);
+    overflow-y: scroll;
+}
+
+.chats-container::-webkit-scrollbar {
+    display: none;
+}
+
+.chat-container {
+    display: flex;
+    padding-bottom: 1rem;
+}
+
+.chat-container .account-icon {
+    font-family: "Material Symbols Outlined";
+    font-size: 20px;
+    color: #fff;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background-color: #000;
+    text-align: center;
+}
+
+.chat-container .chat-body {
+    margin-left: .5rem;
+}
+
+.chat-container .chat-body .name {
+    font-size: .5rem;
+}
+
+.chat-container .chat-body .message {
+  border: 2px solid #333;
+  border-radius: 10px;
+  padding: .5rem;
+  white-space: break-spaces;
+}
+
+.chat-container .time {
+    margin-left: 5px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+}
+
+.chat-container .time {
+    width: 10px;
+    font-size: .5rem;
+}

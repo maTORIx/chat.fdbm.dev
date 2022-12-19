@@ -76,6 +76,7 @@ export class ChatsManager {
   }
 
   onChange() {
+    console.log("changed!")
     for (let func of this.callbacks) {
       func(this.chats);
     }

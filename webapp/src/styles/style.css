@@ -46,93 +46,24 @@ body {
     animation: opacity-change .1s linear 0s 3 normal;
 }
 
-.top-bar button.password-modal-button {
-    background-color: transparent;
-    border: none;
-    height: 26px;
-    margin-left: 3px;
-}
-
-.top-bar button.password-modal-button:hover {
-    animation: opacity-change .1s linear 0s 3 normal;
-}
-
-@keyframes opacity-change {
-    from { opacity: 1;}
-    50% { opacity: 0;}
-    to { opacity: 1;}
-}
-
-.password-modal .container {
-    position: absolute;
-    left: calc((100vw - min(var(--app-width) - 2rem, 500px)) / 2);
-    background-color: white;
-    z-index: 3;
-    width: min(var(--app-width) - 2rem, 500px);
-    padding: 20px;
-    border: 1px solid #333;
-    border-radius: 5px;
-}
-
-.password-modal .container h1 {
-    font-size: 1rem;
-    text-align: center;
-    margin-bottom: 1rem;
-}
-
-.password-modal .container p {
-    text-align: justify;
-    white-space: break-spaces;
-}
-
-.password-modal .container p.notice {
-    font-size: .7rem;
-}
-
-.password-modal .container input {
-    width: 100%;
-    margin: 10px 0;
-    text-align: center;
-}
-
-.password-modal .container button {
-    width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 10px 0;
-    background-color: transparent;
-}
-
-.password-modal .background {
-    position: absolute;
-    top:0px;
-    left: 0px;
-    width: 100%;
-    height: 100%;
-    background-color: black;
-    opacity: 0.5;
-    z-index: 2;
-}
-
 form.chat-form {
-    width: 100%;
+    position: absolute;
+    width: calc(var(--app-width) - 40px);
     display: flex;
     justify-content: space-around;
     align-items: center;
     bottom: 30px;
-    border: 2px solid #333;
     height: 40px;
-    border-radius: 20px;
-    overflow: hidden;
 }
 
 form.chat-form textarea {
+    left: 20px;
     resize: none;
     width: calc(100% - 40px);
     height: 100%;
     border: 0;
     padding: 7px 15px;
+    border: 2px solid #333;
 }
 
 form.chat-form textarea:focus {
@@ -145,74 +76,22 @@ form.chat-form textarea::-webkit-scrollbar {
 
 form.chat-form button.submit {
     width: 40px;
-    height: 40px;
-    border: 0;
+    height: 100%;
+    border: 2px solid #333;
     border-left: 2px solid #333;
     background-color: rgb(0,0,0);
     color: #fff;
-}
-
-.chats-container {
-    height: calc(100vh - 115px);
-    height: calc(100dvh - 115px);
-    overflow-y: scroll;
-}
-
-.chats-container::-webkit-scrollbar {
-    display: none;
-}
-
-.chat-container {
-    display: flex;
-    padding-bottom: 1rem;
-}
-
-.chat-container .account-icon {
-    font-family: "Material Symbols Outlined";
-    font-size: 20px;
-    color: #fff;
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
-    background-color: #000;
-    text-align: center;
-}
-
-.chat-container .chat-body {
-    margin-left: .5rem;
-}
-
-.chat-container .chat-body .name {
-    font-size: .5rem;
-}
-
-.chat-container .chat-body .message {
-  border: 2px solid #333;
-  border-radius: 10px;
-  padding: .5rem;
-  white-space: break-spaces;
-}
-
-.chat-container .time {
-    margin-left: 5px;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-end;
-}
-
-.chat-container .time {
-    width: 10px;
-    font-size: .5rem;
 }
 
 small {
     font-family: "DotGothic16", sans-serif;
     text-align: center;
     display: block;
-    width: 100%;
     font-size: .5rem;
     user-select: none;
     height: 15px;
+    position: absolute;
+    bottom: 2px;
 }
 
 .suggest-latest {
@@ -241,10 +120,6 @@ small {
     font-size: 14px;
     margin-right: 4px;
     transform: translateY(2px);
-}
-
-.suggest-latest.hidden {
-    display: none;
 }
 
 :root {
