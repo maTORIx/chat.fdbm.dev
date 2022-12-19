@@ -3,6 +3,7 @@ body {
 }
 
 .App {
+    margin: auto;
     width: var(--app-width);
     padding: 0px 20px;
     height: 100vh;
@@ -54,6 +55,7 @@ form.chat-form {
     align-items: center;
     bottom: 30px;
     height: 40px;
+    border: 2px solid #333;
 }
 
 form.chat-form textarea {
@@ -61,9 +63,7 @@ form.chat-form textarea {
     resize: none;
     width: calc(100% - 40px);
     height: 100%;
-    border: 0;
     padding: 7px 15px;
-    border: 2px solid #333;
 }
 
 form.chat-form textarea:focus {
@@ -75,10 +75,11 @@ form.chat-form textarea::-webkit-scrollbar {
 }
 
 form.chat-form button.submit {
+    display: flex;
+    align-items: center;
+    justify-content: center;
     width: 40px;
     height: 100%;
-    border: 2px solid #333;
-    border-left: 2px solid #333;
     background-color: rgb(0,0,0);
     color: #fff;
 }
@@ -123,5 +124,5 @@ small {
 }
 
 :root {
-    --app-width: calc(100vw);
+    --app-width: min(500px, 100vw);
 }
