@@ -1,3 +1,4 @@
 .vscode
 database.db
 __debug_bin
+rpc_server/gen/webapp

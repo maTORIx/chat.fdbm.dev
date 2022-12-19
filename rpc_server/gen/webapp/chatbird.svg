@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<svg viewBox="86.516 10.753 140.069 155.914" width="140.069" height="155.914" xmlns="http://www.w3.org/2000/svg" xmlns:bx="https://boxy-svg.com">
-  <style> @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@700'); </style>
-  <text style="fill: rgb(255, 47, 0); font-family: Montserrat; font-size: 128px; font-weight: 700; paint-order: stroke; white-space: pre;" x="93.548" y="134.409">C</text>
-  <path d="M 134.408 30.646 L 143.01 46.237 L 125.806 46.237 L 134.408 30.646 Z" style="paint-order: stroke; fill: rgb(255, 47, 0);" transform="matrix(0, -1, 1, 0, 55.869724, 224.075302)" bx:shape="triangle 125.806 30.646 17.204 15.591 0.5 0 1@d6d165dc"/>
-  <circle style="stroke: rgb(0, 0, 0); paint-order: stroke; fill: rgb(255, 47, 0); stroke-opacity: 0;" cx="182.215" cy="89.172" r="9.155"/>
-  <circle style="stroke: rgb(0, 0, 0); paint-order: stroke; fill: rgb(255, 47, 0); stroke-opacity: 0;" cx="217.43" cy="88.42" r="9.155"/>
-  <circle style="stroke: rgb(0, 0, 0); paint-order: stroke; fill: rgb(255, 47, 0); stroke-opacity: 0;" cx="148.247" cy="89.86" r="9.155"/>
-</svg>
