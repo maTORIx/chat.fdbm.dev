@@ -23,6 +23,8 @@ function App() {
   const [isLatestButtonSuggested, setIsLatestButtonSuggested] = useState(false)
   const [firsttime, setFirstrtime] = useState(true)
   const [lastScrollHeight, setLastScrollHeight] = useState(0)
+  const [isModalShown, setIsModalShown] = useState(false)
+  const [formLowPassword, setFormLowPassword] = useState("")
 
   const url = new URL(window.location.href);
   const discussionId = url.searchParams.get("d");
@@ -34,9 +36,9 @@ function App() {
   useEffect(() => {
     let firsttime = true;
     if (discussionId === null || !!chatsManager) return;
-    let lowPassword = window.localStorage.getItem("lowPassword")
+    let lowPassword = window.localStorage.getItem(`${discussionId}-lowPassword`)
     if (lowPassword === null) lowPassword = ""
-    chatsManager = new ChatsManager(discussionId, "");
+    chatsManager = new ChatsManager(discussionId, lowPassword);
     chatsManager.addEventListener((chats: Chat[]) => {
       setIsScrolled(false)
       setChats(chats);
@@ -69,7 +71,7 @@ function App() {
       setLastScrollHeight(conn.scrollHeight)
       setIsScrolled(true)
     }
-    return () => {}
+    return () => { }
   }, [chats, isScrolled])
 
   // set chats
@@ -95,16 +97,48 @@ function App() {
 
   return (
     <div className="App">
+      {/* Topbar */}
       <div className="top-bar">
         <img src="/chatbird.svg" alt="C" />
-        <label className="profile">
-          <input name="name" onChange={withEventValue(setName)} value={name} placeholder="unknown" maxLength={14} />
-          <span className="account-icon material-symbols-outlined">person</span>
-        </label>
+        <div className="rightside">
+          <label className="profile">
+            <input name="name" onChange={withEventValue(setName)} value={name} placeholder="unknown" maxLength={14} />
+            <span className="account-icon material-symbols-outlined">person</span>
+          </label>
+          <button className="password-modal-button">
+            <span className="material-symbols-outlined" onClick={() => {
+              setIsModalShown(!isModalShown)
+            }}>key</span>
+
+          </button>
+        </div>
       </div>
+      {/* PasswordModal */}
+      <div className="password-modal" hidden={!isModalShown}>
+        <div className="background" onClick={() => setIsModalShown(false)} />
+        <div className="container">
+          <h1>パスワードを設定する</h1>
+          <p>データは暗号化され、 共通のパスワードを知っている人のみが 利用できるようになります。</p>
+          <form onSubmit={(e) => {
+            e.preventDefault();
+            window.localStorage.setItem(`${discussionId}-lowPassword`, formLowPassword)
+            location.reload()
+          }}>
+            <input type="password" placeholder="******" value={formLowPassword} onChange={withEventValue(setFormLowPassword)}/>
+            <button type="submit">
+              LOCK<span className="material-symbols-outlined">lock</span>
+            </button>
+          </form>
+          <p className="notice">※新たにパスワードを設定したチャットルームは全く別のものとして扱われるため、データは引き継がれません。</p>
+          <p className="notice">※パスワードが間違っていた際、注意書きは表示されません。あるはずのチャットが見つからないときは、誤ったパスワードを入力している可能性があります。</p>
+          <p className="notice">※パスワード管理アプリによって自動生成されたパスワードは比較的信頼性が高いといえます。ぜひご検討ください。</p>
+        </div>
+      </div>
+      {/* Chats */}
       <div className="chats-container" id="chats-container" onScroll={onScrollChats}>
         {chatElements}
       </div>
+      {/* Suggest Latest Button */}
       <div className={`suggest-latest ${isLatestButtonSuggested ? "" : "hidden"}`} onClick={() => {
         setIsLatestButtonSuggested(false)
         scrollToLatest()
@@ -114,6 +148,7 @@ function App() {
           新しいチャットが届いています
         </p>
       </div>
+      {/* form */}
       <form
         className="chat-form"
         onSubmit={onSubmit}

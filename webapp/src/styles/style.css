@@ -11,9 +11,14 @@ body {
 
 .top-bar {
     display: flex;
-    top: 0;
     height: 45px;
     justify-content: space-between;
+}
+
+.top-bar .rightside {
+    display: flex;
+    justify-content: right;
+    align-items: center;
 }
 
 .top-bar .profile {
@@ -41,10 +46,73 @@ body {
     animation: opacity-change .1s linear 0s 3 normal;
 }
 
+.top-bar button.password-modal-button {
+    background-color: transparent;
+    border: none;
+    height: 26px;
+    margin-left: 3px;
+}
+
+.top-bar button.password-modal-button:hover {
+    animation: opacity-change .1s linear 0s 3 normal;
+}
+
 @keyframes opacity-change {
     from { opacity: 1;}
     50% { opacity: 0;}
     to { opacity: 1;}
+}
+
+.password-modal .container {
+    position: absolute;
+    left: calc((100vw - min(var(--app-width) - 2rem, 500px)) / 2);
+    background-color: white;
+    z-index: 3;
+    width: min(var(--app-width) - 2rem, 500px);
+    padding: 20px;
+    border: 1px solid #333;
+    border-radius: 5px;
+}
+
+.password-modal .container h1 {
+    font-size: 1rem;
+    text-align: center;
+    margin-bottom: 1rem;
+}
+
+.password-modal .container p {
+    text-align: justify;
+    white-space: break-spaces;
+}
+
+.password-modal .container p.notice {
+    font-size: .7rem;
+}
+
+.password-modal .container input {
+    width: 100%;
+    margin: 10px 0;
+    text-align: center;
+}
+
+.password-modal .container button {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 10px 0;
+    background-color: transparent;
+}
+
+.password-modal .background {
+    position: absolute;
+    top:0px;
+    left: 0px;
+    width: 100%;
+    height: 100%;
+    background-color: black;
+    opacity: 0.5;
+    z-index: 2;
 }
 
 form.chat-form {
