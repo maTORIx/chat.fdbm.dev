@@ -62,12 +62,12 @@ func (ps *ChatsPubSub) Publish(discussionId, hash string, newChat *chatv1.Chat) 
 func (ps *ChatsPubSub) IsDisconnected(discussionId, watchId string) bool {
 	v, ok := ps.WatchList.Load(discussionId)
 	if !ok {
-		return true
+		return false
 	}
 	sub, _ := v.(*sync.Map)
 	w, sub_ok := sub.Load(watchId)
 	if !sub_ok {
-		return true
+		return false
 	}
 	info, _ := w.(*MessageSubscriberInfo)
 	return info == nil
