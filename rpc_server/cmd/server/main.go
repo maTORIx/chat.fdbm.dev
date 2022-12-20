@@ -93,8 +93,10 @@ func main() {
 	mux.Handle(path, handler)
 	mux.Handle("/", http.FileServer(http.Dir("../../gen/webapp")))
 	corsHandler := cors.Default().Handler(h2c.NewHandler(mux, &http2.Server{}))
-	http.ListenAndServe(
-		"localhost:8080",
-		corsHandler,
-	)
+	tmp := &http.Server{
+		Addr:        "localhost:8080",
+		Handler:     corsHandler,
+		ReadTimeout: 5 * time.Second,
+	}
+	tmp.ListenAndServe()
 }
