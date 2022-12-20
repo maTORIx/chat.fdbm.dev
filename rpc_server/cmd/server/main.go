@@ -72,7 +72,7 @@ func (s *ChatServer) GetChatsStream(
 	hash := utils.GenerateHash(req.Msg.DiscussionInfo.LowPassword, config.SecretKey)
 	watchId := chatsController.Pubsub.Subscribe(discussionId, hash, streamRes)
 	for {
-		time.Sleep(time.Second * 60 * 3)
+		time.Sleep(time.Second * 60)
 		if chatsController.Pubsub.IsDisconnected(discussionId, watchId) {
 			return nil
 		}
