@@ -57,11 +57,11 @@ export class ChatsManager {
         }
       });
       for await (let resp of iter) {
-        if (!resp.chat) {
+        if (!resp.chats || resp.chats.length < 1) {
           continue
         }
-        resp.chat.body = this.decryptMessage(resp.chat.body)
-        this.chats.push(resp.chat);
+        resp.chats.forEach((val, idx) => resp.chats[idx].body = this.decryptMessage(val.body))
+        this.chats = this.chats.concat(resp.chats);
         this.onChange();
       }
     } catch(e) {

@@ -46,7 +46,7 @@ message GetChatsStreamRequest {
 }
 
 message GetChatsStreamResponse {
-    Chat chat = 1;
+    repeated Chat chats = 1;
 }
 
 service ChatService {

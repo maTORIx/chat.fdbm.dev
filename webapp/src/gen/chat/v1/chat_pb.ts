@@ -361,9 +361,9 @@ export class GetChatsStreamRequest extends Message<GetChatsStreamRequest> {
  */
 export class GetChatsStreamResponse extends Message<GetChatsStreamResponse> {
   /**
-   * @generated from field: chat.v1.Chat chat = 1;
+   * @generated from field: repeated chat.v1.Chat chats = 1;
    */
-  chat?: Chat;
+  chats: Chat[] = [];
 
   constructor(data?: PartialMessage<GetChatsStreamResponse>) {
     super();
@@ -373,7 +373,7 @@ export class GetChatsStreamResponse extends Message<GetChatsStreamResponse> {
   static readonly runtime = proto3;
   static readonly typeName = "chat.v1.GetChatsStreamResponse";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    { no: 1, name: "chat", kind: "message", T: Chat },
+    { no: 1, name: "chats", kind: "message", T: Chat, repeated: true },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GetChatsStreamResponse {

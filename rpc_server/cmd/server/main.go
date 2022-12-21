@@ -73,7 +73,8 @@ func (s *ChatServer) GetChatsStream(
 	watchId := chatsController.Pubsub.Subscribe(discussionId, hash, streamRes)
 	for {
 		time.Sleep(time.Second * 60)
-		if chatsController.Pubsub.IsDisconnected(discussionId, watchId) {
+		err := streamRes.Send(&chatv1.GetChatsStreamResponse{Chats: []*chatv1.Chat{}})
+		if chatsController.Pubsub.IsDisconnected(discussionId, watchId) || err != nil {
 			return nil
 		}
 	}

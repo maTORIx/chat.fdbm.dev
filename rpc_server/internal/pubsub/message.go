@@ -45,12 +45,13 @@ func (ps *ChatsPubSub) Publish(discussionId, hash string, newChat *chatv1.Chat) 
 		return
 	}
 	sub, _ := v.(*sync.Map)
+	chats := []*chatv1.Chat{newChat}
 	sub.Range(func(key any, v any) bool {
 		info, _ := v.(*MessageSubscriberInfo)
 		watchId, _ := key.(string)
 
 		if info != nil && info.Hash == hash {
-			err := info.StreamRes.Send(&chatv1.GetChatsStreamResponse{Chat: newChat})
+			err := info.StreamRes.Send(&chatv1.GetChatsStreamResponse{Chats: chats})
 			if err != nil {
 				sub.Delete(watchId)
 			}
