@@ -7,12 +7,12 @@ import (
 )
 
 type ChatsController struct {
-	Pubsub pubsub.ChatsPubSub
+	Pubsub pubsub.PubSub[chatv1.GetChatsStreamResponse]
 }
 
 func NewChatsController() ChatsController {
 	return ChatsController{
-		Pubsub: *pubsub.NewChatsPubSub(),
+		Pubsub: *pubsub.NewPubSub[chatv1.GetChatsStreamResponse](),
 	}
 }
 
@@ -22,14 +22,16 @@ func (c *ChatsController) AddChat(chat *chatv1.SendChatRequest, ip_address strin
 	if err != nil {
 		return err
 	}
-
-	c.Pubsub.Publish(newChat.DiscussionId, newChat.Hash, &chatv1.Chat{
+	tmp := &chatv1.Chat{
 		Id:        newChat.Id,
 		UserId:    newChat.Uid,
 		Name:      newChat.Name,
 		Body:      newChat.Body,
 		CreatedAt: newChat.CreatedAt,
-	})
+	}
+	chats := []*chatv1.Chat{tmp}
+	resp := &chatv1.GetChatsStreamResponse{Chats: chats}
+	c.Pubsub.Publish(newChat.DiscussionId, newChat.Hash, nil, resp)
 	return nil
 }
 

@@ -23,6 +23,7 @@ import (
 )
 
 var chatsController controllers.ChatsController
+var bytesController controllers.BytesController
 
 func InitializeDB() error {
 	chatModel := &models.ChatModel{}
@@ -67,17 +68,40 @@ func (s *ChatServer) GetChatsStream(
 	streamRes *connect.ServerStream[chatv1.GetChatsStreamResponse],
 ) error {
 	log.Println("Request headers: ", req.Header())
-
 	discussionId := req.Msg.DiscussionInfo.Id
 	hash := utils.GenerateHash(req.Msg.DiscussionInfo.LowPassword, config.SecretKey)
-	watchId := chatsController.Pubsub.Subscribe(discussionId, hash, streamRes)
+	watchId := chatsController.Pubsub.Subscribe(discussionId, hash, nil, streamRes)
+	defer chatsController.Pubsub.Unsubscribe(discussionId, watchId)
 	for {
-		time.Sleep(time.Second * 60)
+		time.Sleep(config.ConnectionCheckInterval)
 		err := streamRes.Send(&chatv1.GetChatsStreamResponse{Chats: []*chatv1.Chat{}})
-		if chatsController.Pubsub.IsDisconnected(discussionId, watchId) || err != nil {
+		if err != nil {
 			return nil
 		}
 	}
+}
+
+func (s *ChatServer) SendBytesStream(
+	ctx context.Context,
+	stream *connect.ClientStream[chatv1.SendBytesStreamRequest],
+) (*connect.Response[chatv1.SendBytesStreamResponse], error) {
+	log.Println("Request headers: ", stream.RequestHeader())
+	result, err := bytesController.Send(stream)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeAborted, err)
+	}
+	res := connect.NewResponse(result)
+	return res, nil
+}
+
+func (s *ChatServer) ListenBytesStream(
+	ctx context.Context,
+	req *connect.Request[chatv1.ListenBytesStreamRequest],
+	streamRes *connect.ServerStream[chatv1.ListenBytesStreamResponse],
+) error {
+	log.Println("Request headers: ", req.Header())
+	bytesController.Listen(req.Msg, streamRes)
+	return nil
 }
 
 func main() {
@@ -87,6 +111,7 @@ func main() {
 	}
 
 	chatsController = controllers.NewChatsController()
+	bytesController = controllers.NewBytesController()
 
 	server := &ChatServer{}
 	mux := http.NewServeMux()

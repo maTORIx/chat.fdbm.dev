@@ -49,8 +49,42 @@ message GetChatsStreamResponse {
     repeated Chat chats = 1;
 }
 
+message UserInfo {
+    string name = 1;
+    string unsafe_id = 2;
+}
+
+message BytesData {
+    bytes data = 1;
+    string id = 2;
+    string type = 3;
+    string filename = 4;
+    int32 created_at = 5;
+    bool finished = 6;
+}
+
+message SendBytesStreamRequest {
+    DiscussionInfo discussion_info = 1;
+    BytesData data = 2;
+    UserInfo user = 3;
+}
+
+message SendBytesStreamResponse {
+}
+
+message ListenBytesStreamRequest {
+    DiscussionInfo discussion_info = 1;
+    UserInfo user = 2;
+}
+
+message ListenBytesStreamResponse {
+    BytesData data = 1;
+}
+
 service ChatService {
     rpc SendChat(SendChatRequest) returns (SendChatResponse) {};
     rpc GetChats(GetChatsRequest) returns (GetChatsResponse) {};
     rpc GetChatsStream(GetChatsStreamRequest) returns (stream GetChatsStreamResponse) {};
+    rpc SendBytesStream(stream SendBytesStreamRequest) returns (SendBytesStreamResponse) {};
+    rpc ListenBytesStream(ListenBytesStreamRequest) returns (stream ListenBytesStreamResponse) {};
 }

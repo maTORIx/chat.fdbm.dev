@@ -30,6 +30,8 @@ type ChatServiceClient interface {
 	SendChat(context.Context, *connect_go.Request[v1.SendChatRequest]) (*connect_go.Response[v1.SendChatResponse], error)
 	GetChats(context.Context, *connect_go.Request[v1.GetChatsRequest]) (*connect_go.Response[v1.GetChatsResponse], error)
 	GetChatsStream(context.Context, *connect_go.Request[v1.GetChatsStreamRequest]) (*connect_go.ServerStreamForClient[v1.GetChatsStreamResponse], error)
+	SendBytesStream(context.Context) *connect_go.ClientStreamForClient[v1.SendBytesStreamRequest, v1.SendBytesStreamResponse]
+	ListenBytesStream(context.Context, *connect_go.Request[v1.ListenBytesStreamRequest]) (*connect_go.ServerStreamForClient[v1.ListenBytesStreamResponse], error)
 }
 
 // NewChatServiceClient constructs a client for the chat.v1.ChatService service. By default, it uses
@@ -57,14 +59,26 @@ func NewChatServiceClient(httpClient connect_go.HTTPClient, baseURL string, opts
 			baseURL+"/chat.v1.ChatService/GetChatsStream",
 			opts...,
 		),
+		sendBytesStream: connect_go.NewClient[v1.SendBytesStreamRequest, v1.SendBytesStreamResponse](
+			httpClient,
+			baseURL+"/chat.v1.ChatService/SendBytesStream",
+			opts...,
+		),
+		listenBytesStream: connect_go.NewClient[v1.ListenBytesStreamRequest, v1.ListenBytesStreamResponse](
+			httpClient,
+			baseURL+"/chat.v1.ChatService/ListenBytesStream",
+			opts...,
+		),
 	}
 }
 
 // chatServiceClient implements ChatServiceClient.
 type chatServiceClient struct {
-	sendChat       *connect_go.Client[v1.SendChatRequest, v1.SendChatResponse]
-	getChats       *connect_go.Client[v1.GetChatsRequest, v1.GetChatsResponse]
-	getChatsStream *connect_go.Client[v1.GetChatsStreamRequest, v1.GetChatsStreamResponse]
+	sendChat          *connect_go.Client[v1.SendChatRequest, v1.SendChatResponse]
+	getChats          *connect_go.Client[v1.GetChatsRequest, v1.GetChatsResponse]
+	getChatsStream    *connect_go.Client[v1.GetChatsStreamRequest, v1.GetChatsStreamResponse]
+	sendBytesStream   *connect_go.Client[v1.SendBytesStreamRequest, v1.SendBytesStreamResponse]
+	listenBytesStream *connect_go.Client[v1.ListenBytesStreamRequest, v1.ListenBytesStreamResponse]
 }
 
 // SendChat calls chat.v1.ChatService.SendChat.
@@ -82,11 +96,23 @@ func (c *chatServiceClient) GetChatsStream(ctx context.Context, req *connect_go.
 	return c.getChatsStream.CallServerStream(ctx, req)
 }
 
+// SendBytesStream calls chat.v1.ChatService.SendBytesStream.
+func (c *chatServiceClient) SendBytesStream(ctx context.Context) *connect_go.ClientStreamForClient[v1.SendBytesStreamRequest, v1.SendBytesStreamResponse] {
+	return c.sendBytesStream.CallClientStream(ctx)
+}
+
+// ListenBytesStream calls chat.v1.ChatService.ListenBytesStream.
+func (c *chatServiceClient) ListenBytesStream(ctx context.Context, req *connect_go.Request[v1.ListenBytesStreamRequest]) (*connect_go.ServerStreamForClient[v1.ListenBytesStreamResponse], error) {
+	return c.listenBytesStream.CallServerStream(ctx, req)
+}
+
 // ChatServiceHandler is an implementation of the chat.v1.ChatService service.
 type ChatServiceHandler interface {
 	SendChat(context.Context, *connect_go.Request[v1.SendChatRequest]) (*connect_go.Response[v1.SendChatResponse], error)
 	GetChats(context.Context, *connect_go.Request[v1.GetChatsRequest]) (*connect_go.Response[v1.GetChatsResponse], error)
 	GetChatsStream(context.Context, *connect_go.Request[v1.GetChatsStreamRequest], *connect_go.ServerStream[v1.GetChatsStreamResponse]) error
+	SendBytesStream(context.Context, *connect_go.ClientStream[v1.SendBytesStreamRequest]) (*connect_go.Response[v1.SendBytesStreamResponse], error)
+	ListenBytesStream(context.Context, *connect_go.Request[v1.ListenBytesStreamRequest], *connect_go.ServerStream[v1.ListenBytesStreamResponse]) error
 }
 
 // NewChatServiceHandler builds an HTTP handler from the service implementation. It returns the path
@@ -111,6 +137,16 @@ func NewChatServiceHandler(svc ChatServiceHandler, opts ...connect_go.HandlerOpt
 		svc.GetChatsStream,
 		opts...,
 	))
+	mux.Handle("/chat.v1.ChatService/SendBytesStream", connect_go.NewClientStreamHandler(
+		"/chat.v1.ChatService/SendBytesStream",
+		svc.SendBytesStream,
+		opts...,
+	))
+	mux.Handle("/chat.v1.ChatService/ListenBytesStream", connect_go.NewServerStreamHandler(
+		"/chat.v1.ChatService/ListenBytesStream",
+		svc.ListenBytesStream,
+		opts...,
+	))
 	return "/chat.v1.ChatService/", mux
 }
 
@@ -127,4 +163,12 @@ func (UnimplementedChatServiceHandler) GetChats(context.Context, *connect_go.Req
 
 func (UnimplementedChatServiceHandler) GetChatsStream(context.Context, *connect_go.Request[v1.GetChatsStreamRequest], *connect_go.ServerStream[v1.GetChatsStreamResponse]) error {
 	return connect_go.NewError(connect_go.CodeUnimplemented, errors.New("chat.v1.ChatService.GetChatsStream is not implemented"))
+}
+
+func (UnimplementedChatServiceHandler) SendBytesStream(context.Context, *connect_go.ClientStream[v1.SendBytesStreamRequest]) (*connect_go.Response[v1.SendBytesStreamResponse], error) {
+	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("chat.v1.ChatService.SendBytesStream is not implemented"))
+}
+
+func (UnimplementedChatServiceHandler) ListenBytesStream(context.Context, *connect_go.Request[v1.ListenBytesStreamRequest], *connect_go.ServerStream[v1.ListenBytesStreamResponse]) error {
+	return connect_go.NewError(connect_go.CodeUnimplemented, errors.New("chat.v1.ChatService.ListenBytesStream is not implemented"))
 }

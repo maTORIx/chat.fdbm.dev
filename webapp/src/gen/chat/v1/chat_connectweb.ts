@@ -3,7 +3,7 @@
 /* eslint-disable */
 // @ts-nocheck
 
-import { GetChatsRequest, GetChatsResponse, GetChatsStreamRequest, GetChatsStreamResponse, SendChatRequest, SendChatResponse } from "./chat_pb.js";
+import { GetChatsRequest, GetChatsResponse, GetChatsStreamRequest, GetChatsStreamResponse, ListenBytesStreamRequest, ListenBytesStreamResponse, SendBytesStreamRequest, SendBytesStreamResponse, SendChatRequest, SendChatResponse } from "./chat_pb.js";
 import { MethodKind } from "@bufbuild/protobuf";
 
 /**
@@ -37,6 +37,24 @@ export const ChatService = {
       name: "GetChatsStream",
       I: GetChatsStreamRequest,
       O: GetChatsStreamResponse,
+      kind: MethodKind.ServerStreaming,
+    },
+    /**
+     * @generated from rpc chat.v1.ChatService.SendBytesStream
+     */
+    sendBytesStream: {
+      name: "SendBytesStream",
+      I: SendBytesStreamRequest,
+      O: SendBytesStreamResponse,
+      kind: MethodKind.ClientStreaming,
+    },
+    /**
+     * @generated from rpc chat.v1.ChatService.ListenBytesStream
+     */
+    listenBytesStream: {
+      name: "ListenBytesStream",
+      I: ListenBytesStreamRequest,
+      O: ListenBytesStreamResponse,
       kind: MethodKind.ServerStreaming,
     },
   }
