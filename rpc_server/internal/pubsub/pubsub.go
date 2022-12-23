@@ -59,13 +59,8 @@ func (ps *PubSub[T]) Publish(discussionId, hash string, ignoreId *string, item *
 	sub, _ := v.(*sync.Map)
 	sub.Range(func(key any, v any) bool {
 		info, _ := v.(*SubscriberInfo[T])
-		watchId, _ := key.(string)
-
 		if info != nil && info.Hash == hash && (info.IgnoreId == nil || info.IgnoreId != ignoreId) {
-			err := info.StreamRes.Send(item)
-			if err != nil {
-				sub.Delete(watchId)
-			}
+			go info.StreamRes.Send(item)
 		}
 		return true
 	})
